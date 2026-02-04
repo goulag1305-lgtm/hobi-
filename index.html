@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Valentine's Day</title>
+  <title>Veux-tu être ma Valentine ?</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -36,7 +36,7 @@
       justify-content: center;
       align-items: center;
       gap: 20px;
-      min-height: 150px; /* Espace pour que le bouton Yes puisse grossir */
+      min-height: 150px;
     }
 
     button {
@@ -67,17 +67,18 @@
 <body>
 
   <div class="card" id="mainCard">
-    <h1 id="question">Naomie, will you be my valentine?</h1>
+    <h1 id="question">Naomie, veux-tu être ma Valentine ?</h1>
     
     <div class="button-zone">
-      <button id="yesBtn">Yes</button>
-      <button id="noBtn">No</button>
+      <button id="yesBtn">Oui</button>
+      <button id="noBtn">Non</button>
     </div>
 
-    <p id="hint" style="margin-top:20px; color:#666;">Try to say no... 😈</p>
+    <p id="hint" style="margin-top:20px; color:#666;">Essaie de dire non pour voir... 😈</p>
 
     <div id="result">
-      <h2>YAY! ❤️</h2>
+      <h2>OUIII ! ❤️</h2>
+      <p>C'était sûr en fait ! 🥰</p>
       <img src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" style="width:100%; border-radius:10px;">
     </div>
   </div>
@@ -93,30 +94,43 @@
     let yesScale = 1;
     let noScale = 1;
 
+    const messages = [
+      "Tu es sûre ? 🥺",
+      "Vraiment sûre ? 🤨",
+      "Réfléchis encore ! 🧐",
+      "Dernière chance ! 😱",
+      "Le 'Oui' devient énorme ! ⬆️",
+      "Tu n'as plus le choix là ! 🦖",
+      "Allez, clique sur Oui ! ❤️",
+      "C'est inutile de résister ! 😈"
+    ];
+    
+    let msgIndex = 0;
+
     noBtn.addEventListener('click', () => {
-      // 1. On fait grossir le bouton YES
+      // 1. On fait grossir le bouton OUI
       yesScale += 0.5;
       yesBtn.style.transform = `scale(${yesScale})`;
 
-      // 2. On fait rétrécir le bouton NO
+      // 2. On fait rétrécir le bouton NON
       noScale -= 0.15;
+      
       if (noScale < 0.3) {
-        noBtn.style.display = 'none'; // Il disparait s'il est trop petit
-        hint.innerText = "No choice left! ❤️";
+        noBtn.style.display = 'none';
+        hint.innerText = "Plus le choix ! Que de l'amour ! ❤️";
       } else {
         noBtn.style.transform = `scale(${noScale})`;
-        hint.innerText = "Yes is getting bigger! ⬆️";
+        hint.innerText = messages[msgIndex];
+        msgIndex = (msgIndex + 1) % messages.length;
       }
     });
 
     yesBtn.addEventListener('click', () => {
-      // On cache tout sauf le résultat
       question.style.display = 'none';
       buttonZone.style.display = 'none';
       hint.style.display = 'none';
       result.style.display = 'block';
 
-      // Confettis !
       confetti({
         particleCount: 150,
         spread: 70,
