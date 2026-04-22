@@ -1,142 +1,182 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Veux-tu être ma Valentine ?</title>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Matrice d'Eisenhower</title>
 
   <style>
     body {
       margin: 0;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      background: #ffd6e7;
-      font-family: sans-serif;
-      text-align: center;
-      overflow: hidden;
     }
 
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
-      z-index: 10;
+    h1 {
+      margin: 20px;
     }
 
-    .button-zone {
-      margin-top: 30px;
+    .form {
+      margin-bottom: 20px;
       display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
       justify-content: center;
-      align-items: center;
-      gap: 20px;
-      min-height: 150px;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 200px;
     }
 
     button {
-      padding: 15px 25px;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 50px;
-      border: none;
+      padding: 10px 15px;
       cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    #yesBtn {
-      background: #ff3b7a;
+      border: none;
+      background: #333;
       color: white;
+      border-radius: 5px;
     }
 
-    #noBtn {
-      background: #e5e7eb;
-      color: black;
+    .matrix {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      width: 90%;
+      height: 70vh;
+      gap: 10px;
     }
 
-    #result { display: none; }
-    
-    h2 { color: #ff3b7a; }
+    .quadrant {
+      padding: 15px;
+      border-radius: 10px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    #q1 { background: #ffb3b3; } /* urgent important */
+    #q2 { background: #fff0b3; } /* important pas urgent */
+    #q3 { background: #ffd9b3; } /* urgent pas important */
+    #q4 { background: #e0e0e0; } /* inutile */
+
+    .quadrant h2 {
+      margin-top: 0;
+    }
+
+    .task {
+      background: white;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .task:hover {
+      transform: scale(1.03);
+      background: #f0f0f0;
+    }
+
+    /* Placement (important ↑, urgent →) */
+    #q2 { grid-column: 1; grid-row: 1; }
+    #q1 { grid-column: 2; grid-row: 1; }
+    #q4 { grid-column: 1; grid-row: 2; }
+    #q3 { grid-column: 2; grid-row: 2; }
+
   </style>
 </head>
+
 <body>
 
-  <div class="card" id="mainCard">
-    <h1 id="question">Naomie, veux-tu être ma Valentine ?</h1>
-    
-    <div class="button-zone">
-      <button id="yesBtn">Oui</button>
-      <button id="noBtn">Non</button>
+  <h1>Matrice d'Eisenhower</h1>
+
+  <div class="form">
+    <input type="text" id="taskInput" placeholder="Nouvelle tâche...">
+
+    <label>
+      <input type="checkbox" id="important"> Important
+    </label>
+
+    <label>
+      <input type="checkbox" id="urgent"> Urgent
+    </label>
+
+    <button onclick="addTask()">Ajouter</button>
+  </div>
+
+  <div class="matrix">
+    <div class="quadrant" id="q2">
+      <h2>🟡 Important / Pas urgent</h2>
     </div>
 
-    <p id="hint" style="margin-top:20px; color:#666;">Essaie de dire non pour voir... 😈</p>
+    <div class="quadrant" id="q1">
+      <h2>🔴 Important / Urgent</h2>
+    </div>
 
-    <div id="result">
-      <h2>OUIII ! ❤️</h2>
-      <p>C'était sûr en fait ! 🥰</p>
-      <img src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" style="width:100%; border-radius:10px;">
+    <div class="quadrant" id="q4">
+      <h2>⚫ Pas important / Pas urgent</h2>
+    </div>
+
+    <div class="quadrant" id="q3">
+      <h2>🟠 Pas important / Urgent</h2>
     </div>
   </div>
 
   <script>
-    const yesBtn = document.getElementById('yesBtn');
-    const noBtn = document.getElementById('noBtn');
-    const question = document.getElementById('question');
-    const hint = document.getElementById('hint');
-    const result = document.getElementById('result');
-    const buttonZone = document.querySelector('.button-zone');
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-    let yesScale = 1;
-    let noScale = 1;
+    function saveTasks() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
 
-    const messages = [
-      "Tu es sûre ? 🥺",
-      "Vraiment sûre ? 🤨",
-      "Réfléchis encore ! 🧐",
-      "Dernière chance ! 😱",
-      "Le 'Oui' devient énorme ! ⬆️",
-      "Tu n'as plus le choix là ! 🦖",
-      "Allez, clique sur Oui ! ❤️",
-      "C'est inutile de résister ! 😈"
-    ];
-    
-    let msgIndex = 0;
-
-    noBtn.addEventListener('click', () => {
-      // 1. On fait grossir le bouton OUI
-      yesScale += 0.5;
-      yesBtn.style.transform = `scale(${yesScale})`;
-
-      // 2. On fait rétrécir le bouton NON
-      noScale -= 0.15;
-      
-      if (noScale < 0.3) {
-        noBtn.style.display = 'none';
-        hint.innerText = "Plus le choix ! Que de l'amour ! ❤️";
-      } else {
-        noBtn.style.transform = `scale(${noScale})`;
-        hint.innerText = messages[msgIndex];
-        msgIndex = (msgIndex + 1) % messages.length;
-      }
-    });
-
-    yesBtn.addEventListener('click', () => {
-      question.style.display = 'none';
-      buttonZone.style.display = 'none';
-      hint.style.display = 'none';
-      result.style.display = 'block';
-
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 }
+    function renderTasks() {
+      document.querySelectorAll(".quadrant").forEach(q => {
+        q.innerHTML = q.querySelector("h2").outerHTML;
       });
-    });
+
+      tasks.forEach((task, index) => {
+        const div = document.createElement("div");
+        div.className = "task";
+        div.innerText = task.text;
+
+        div.onclick = () => {
+          tasks.splice(index, 1);
+          saveTasks();
+          renderTasks();
+        };
+
+        document.getElementById(task.quadrant).appendChild(div);
+      });
+    }
+
+    function addTask() {
+      const text = document.getElementById("taskInput").value;
+      const important = document.getElementById("important").checked;
+      const urgent = document.getElementById("urgent").checked;
+
+      if (!text) return;
+
+      let quadrant;
+
+      if (important && urgent) quadrant = "q1";
+      else if (important && !urgent) quadrant = "q2";
+      else if (!important && urgent) quadrant = "q3";
+      else quadrant = "q4";
+
+      tasks.push({ text, quadrant });
+
+      saveTasks();
+      renderTasks();
+
+      document.getElementById("taskInput").value = "";
+      document.getElementById("important").checked = false;
+      document.getElementById("urgent").checked = false;
+    }
+
+    renderTasks();
   </script>
+
 </body>
 </html>
